@@ -3,7 +3,7 @@ package packet
 import (
 	"bytes"
 
-	"github.com/bio-routing/bio-rd/util/decoder"
+	bgppkt "github.com/bio-routing/bio-rd/protocols/bgp/packet"
 	"github.com/pkg/errors"
 )
 
@@ -11,7 +11,7 @@ import (
 type RouteMonitoringMsg struct {
 	CommonHeader  *CommonHeader
 	PerPeerHeader *PerPeerHeader
-	BGPUpdate     []byte
+	BGPUpdate     *bgppkt.BGPMessage
 }
 
 // MsgType returns the type of this message
@@ -31,13 +31,11 @@ func decodeRouteMonitoringMsg(buf *bytes.Buffer, ch *CommonHeader) (*RouteMonito
 
 	rm.PerPeerHeader = pph
 
-	rm.BGPUpdate = make([]byte, ch.MsgLength-CommonHeaderLen-PerPeerHeaderLen)
-
-	fields := []interface{}{
-		&rm.BGPUpdate,
-	}
-
-	err = decoder.Decode(buf, fields)
+	rm.BGPUpdate, err = bgppkt.Decode(buf, &bgppkt.DecodeOptions{
+		AddPathIPv4Unicast: false,
+		AddPathIPv6Unicast: false,
+		Use32BitASN:        true,
+	})
 	if err != nil {
 		return nil, err
 	}

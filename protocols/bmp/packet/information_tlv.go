@@ -14,7 +14,7 @@ const (
 type InformationTLV struct {
 	InformationType   uint16
 	InformationLength uint16
-	Information       []byte
+	Information       string
 }
 
 func decodeInformationTLV(buf *bytes.Buffer) (*InformationTLV, error) {
@@ -30,15 +30,16 @@ func decodeInformationTLV(buf *bytes.Buffer) (*InformationTLV, error) {
 		return infoTLV, err
 	}
 
-	infoTLV.Information = make([]byte, infoTLV.InformationLength)
+	information := make([]byte, infoTLV.InformationLength)
 	fields = []interface{}{
-		&infoTLV.Information,
+		&information,
 	}
 
 	err = decoder.Decode(buf, fields)
 	if err != nil {
 		return infoTLV, err
 	}
+	infoTLV.Information = string(information)
 
 	return infoTLV, nil
 }

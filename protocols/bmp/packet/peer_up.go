@@ -3,6 +3,7 @@ package packet
 import (
 	"bytes"
 
+	bgppkt "github.com/bio-routing/bio-rd/protocols/bgp/packet"
 	"github.com/bio-routing/bio-rd/util/decoder"
 	"github.com/pkg/errors"
 )
@@ -19,8 +20,8 @@ type PeerUpNotification struct {
 	LocalAddress    [16]byte
 	LocalPort       uint16
 	RemotePort      uint16
-	SentOpenMsg     []byte
-	ReceivedOpenMsg []byte
+	SentOpenMsg     *bgppkt.BGPMessage
+	ReceivedOpenMsg *bgppkt.BGPMessage
 	Information     []byte
 }
 
@@ -52,17 +53,23 @@ func decodePeerUpNotification(buf *bytes.Buffer, ch *CommonHeader) (*PeerUpNotif
 		return nil, err
 	}
 
-	sentOpenMsg, err := getOpenMsg(buf)
+	p.SentOpenMsg, err = bgppkt.Decode(buf, &bgppkt.DecodeOptions{
+		AddPathIPv4Unicast: false,
+		AddPathIPv6Unicast: false,
+		Use32BitASN:        true,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get OPEN message")
 	}
-	p.SentOpenMsg = sentOpenMsg
 
-	recvOpenMsg, err := getOpenMsg(buf)
+	p.ReceivedOpenMsg, err = bgppkt.Decode(buf, &bgppkt.DecodeOptions{
+		AddPathIPv4Unicast: false,
+		AddPathIPv6Unicast: false,
+		Use32BitASN:        true,
+	})
 	if err != nil {
 		return nil, errors.Wrap(err, "Unable to get OPEN message")
 	}
-	p.ReceivedOpenMsg = recvOpenMsg
 
 	if buf.Len() == 0 {
 		return p, nil

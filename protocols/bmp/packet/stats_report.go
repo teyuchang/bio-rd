@@ -12,7 +12,7 @@ type StatsReport struct {
 	CommonHeader  *CommonHeader
 	PerPeerHeader *PerPeerHeader
 	StatsCount    uint32
-	Stats         []*InformationTLV
+	Stats         []*Stat
 }
 
 // MsgType returns the type of this message
@@ -41,14 +41,14 @@ func decodeStatsReport(buf *bytes.Buffer, ch *CommonHeader) (Msg, error) {
 		return sr, err
 	}
 
-	sr.Stats = make([]*InformationTLV, sr.StatsCount)
+	sr.Stats = make([]*Stat, sr.StatsCount)
 	for i := uint32(0); i < sr.StatsCount; i++ {
-		infoTLV, err := decodeInformationTLV(buf)
+		stat, err := decodeStat(buf)
 		if err != nil {
 			return sr, errors.Wrap(err, "Unable to decode information TLV")
 		}
 
-		sr.Stats[i] = infoTLV
+		sr.Stats[i] = stat
 	}
 
 	return sr, nil
